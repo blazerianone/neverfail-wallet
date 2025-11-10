@@ -1,33 +1,8 @@
-### `README.md` (Wallet repo)
 
-````markdown
 # Solana × x402 Auto-Pay Wallet (Pay-per-RPC)
 
 A developer-friendly Solana wallet that adds **x402 Pay-per-RPC** to a modern open-source wallet UI.  
 Solve failed transactions during congestion by letting users **buy premium RPC access only when they need it**—no monthly plans required.
-
-> **Live facilitator (devnet):** `https://x402-neverfail.blockforge.live/rpc`
-
-<p align="center">
-  <a href="https://solana.com/x402/hackathon#resources">
-    <picture>
-      <source srcset="logo-dark.svg" media="(prefers-color-scheme: dark)">
-      <source srcset="logo-light.svg" media="(prefers-color-scheme: light)">
-      <img src="logo-light.svg" alt="Project logo" height="84">
-    </picture>
-  </a>
-</p>
-
-<p align="center">Pay-per-RPC wallet for the Solana x402 Hackathon</p>
-
-<p align="center">
-  <a href="https://solana.com/x402/hackathon#resources">
-    <img alt="Hackathon" src="https://img.shields.io/badge/Solana-x402%20Hackathon-9945FF?style=flat-square" />
-  </a>
-  <a href="https://github.com/your-org/your-repo/actions/workflows/ci.yaml">
-    <img alt="Build status" src="https://img.shields.io/github/actions/workflow/status/your-org/your-repo/ci.yaml?style=flat-square&branch=main" />
-  </a>
-</p>
 
 [![Wallet UI](demo.gif)](#)
 
