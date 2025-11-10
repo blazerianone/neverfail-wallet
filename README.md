@@ -1,58 +1,129 @@
+### `README.md` (Wallet repo)
+
+````markdown
+# Solana × x402 Auto-Pay Wallet (Pay-per-RPC)
+
+A developer-friendly Solana wallet that adds **x402 Pay-per-RPC** to a modern open-source wallet UI.  
+Solve failed transactions during congestion by letting users **buy premium RPC access only when they need it**—no monthly plans required.
+
+> **Live facilitator (devnet):** `https://x402-neverfail.blockforge.live/rpc`
+
 <p align="center">
-  <a href="https://samui.build">
+  <a href="https://solana.com/x402/hackathon#resources">
     <picture>
       <source srcset="logo-dark.svg" media="(prefers-color-scheme: dark)">
       <source srcset="logo-light.svg" media="(prefers-color-scheme: light)">
-      <img src="logo-light.svg" alt="Samui logo">
+      <img src="logo-light.svg" alt="Project logo" height="84">
     </picture>
   </a>
 </p>
 
-<p align="center">Open Source Solana wallet and toolbox for builders 🏟 Cypherpunk Hackathon</p>
+<p align="center">Pay-per-RPC wallet for the Solana x402 Hackathon</p>
 
 <p align="center">
-    <a href="https://samui.build/go/discord">
-        <img alt="Discord" src="https://img.shields.io/discord/1426222948162863275?style=flat-square&label=discord" />
-    </a>
-    <a href="https://github.com/samui-build/samui-wallet/actions/workflows/ci.yaml">
-        <img alt="Build status" src="https://img.shields.io/github/actions/workflow/status/samui-build/samui-wallet/ci.yaml?style=flat-square&branch=main" />
-    </a>
+  <a href="https://solana.com/x402/hackathon#resources">
+    <img alt="Hackathon" src="https://img.shields.io/badge/Solana-x402%20Hackathon-9945FF?style=flat-square" />
+  </a>
+  <a href="https://github.com/your-org/your-repo/actions/workflows/ci.yaml">
+    <img alt="Build status" src="https://img.shields.io/github/actions/workflow/status/your-org/your-repo/ci.yaml?style=flat-square&branch=main" />
+  </a>
 </p>
 
-[![Samui Wallet UI](demo.gif)](https://samui.build)
+[![Wallet UI](demo.gif)](#)
+
+---
+
+## Why (Pain Points)
+
+- During **network congestion**, transactions sent over **public RPC** often fail or time out.  
+- Most retail users **don’t want a monthly private RPC plan** just to be safe a few times per month.  
+- We add a **one-click, pay-per-use** option directly inside the wallet using **x402**.
+
+**Flow:** User toggles **Premium RPC**, pays once via on-chain USDC (devnet) when challenged, enjoys low-latency RPC for the next important action (mint/sale/transfer), then the wallet **auto-resets to public RPC**.
+
+---
+
+## Features
+
+- 🔁 **x402 Pay-per-RPC**: challenge–response payments in **USDC (devnet)** to unlock premium RPC.
+- ⚙️ **Auto-pay wrapper**: detects HTTP **402**, builds & signs the exact payment tx (from `accepts`), retries with `X-Payment`.
+- 🔐 **Wallet-native signing**: uses the in-extension sign service; optional approval gates / caps.
+- 🧰 Built on a modern, open-source Solana wallet codebase (see **Credits**).
 
 ---
 
 ## Requirements
 
-- [FNM](https://github.com/Schniz/fnm) or [NVM](https://github.com/nvm-sh/nvm)
-- [Node](https://nodejs.org)
-- [Bun](https://bun.sh)
-
-## Installation
-
-```bash
-git clone git@github.com:samui-build/samui-wallet.git
-cd samui-wallet
-fnm use # or nvm use
-bun install
-bun dev # or bun --filter=<app-name> dev
-```
-
-## Documentation
-
-For more info on how to configure Samui [head over to our docs](https://samui.build).
-
-## Contributing
-
-If you're interested in contributing to Samui, please read our [contributing docs](./CONTRIBUTING.md) before submitting a pull request.
-
-Samui is currently maintained by [beeman](https://x.com/beeman_nl) and [tobeycodes](https://x.com/tobeycodes), with support from a number of contributors.
-
-<a href="https://github.com/samui-build/samui-wallet/graphs/contributors">
-    <img src="https://contrib.rocks/image?repo=samui-build/samui-wallet" />
-</a>
+- **Node** (LTS) with **FNM** or **NVM**
+- **Bun** (for workspace scripts)
+- Chrome/Chromium (load the extension in dev mode)
 
 ---
 
-**Join our community** [Discord](https://samui.build/go/discord) | [X.com](https://samui.build/go/x)
+## Quick Start (Dev)
+
+```bash
+git clone https://github.com/blazerianone/neverfail-wallet.git
+cd neverfail-wallet
+fnm use        # or: nvm use
+bun install
+
+# run the web/extension app in dev
+bun dev        # or: bun --filter=<app-name> dev
+````
+
+Load the extension/build per the original wallet instructions.
+
+---
+
+## Configuration
+
+Point the wallet to your **x402 facilitator**:
+
+```ts
+// src/lib/solana.ts
+export const FACILITATOR_URL = 'https://x402-neverfail.blockforge.live/rpc'
+```
+
+The wallet uses:
+
+* **Public devnet RPC** by default
+* **Premium RPC** (facilitator URL) when users **Enable Premium**
+
+When the facilitator responds with **HTTP 402**, the wallet:
+
+1. Parses the **`accepts`** object (USDC mint, amount, receiver).
+2. Builds the exact **USDC transfer** transaction.
+3. **Signs** it in-wallet.
+4. Retries the RPC with an **`X-Payment`** header containing the signed payment bytes.
+
+If the facilitator returns a serialized challenge tx, the wallet signs it verbatim.
+
+---
+
+## Usage (Demo Buttons)
+
+Inside the side panel:
+
+* **Enable Boost My Transaction** – triggers a probe; facilitator replies **402** with `accepts`; wallet auto-builds the USDC payment & retries, activating premium access.
+
+> This project targets **devnet**. Airdrop SOL for fees and fund USDC for testing.
+
+---
+
+## How x402 Works (High-Level)
+
+```
+Wallet → POST /rpc
+         ← 402 { accepts: [{ asset: <USDC mint>, payTo, maxAmountRequired, ... }] }
+
+Wallet builds USDC transfer (exact recipe)
+Wallet signs → adds X-Payment: base64(JSON{ x402Version, payload: { serializedTransaction } })
+             → Facilitator verifies on-chain payment
+             → Proxies original RPC to premium upstream
+             ← RPC JSON (success) (+ optional paymentSignature)
+```
+
+---
+ a **tiny architecture diagram** (SVG) and a **CI YAML** for lint/build so the badges work out-of-the-box?
+```
