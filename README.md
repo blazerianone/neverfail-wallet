@@ -137,6 +137,7 @@ If you’d like to improve wallet UX, add new RPC providers, or extend x402 supp
 - **Website**: https://neverfailwallet.com/
 - **Facilitator (Devnet)**: https://x402.neverfailwallet.com/rpc
 - **Facilitator Source**: https://github.com/blazerianone/neverfail-wallet-facilitator
+- **X402 Scan**: https://www.x402scan.com/server/0c75737a-933c-4b9b-bd8f-ae88dd4ad907
 
 ---
 
