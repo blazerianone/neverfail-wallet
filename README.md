@@ -104,8 +104,39 @@ bun install
 bun dev
 ```
 
-Then open **chrome://extensions** → **Load unpacked** → select the output folder (e.g., `apps/extension/.output/chrome-mv3-dev`).  
-Toggle **Boost My Transaction** to activate **Premium RPC Auto-Pay**.
+## 🚀 Load the Extension in Chrome
+
+1. **Open**
+   ```
+   chrome://extensions/
+   ```
+2. **Enable Developer Mode**  
+   Toggle the switch in the **top-right corner** of the Extensions page.
+
+3. **Load the Extension**  
+   Click **Load unpacked** → select the build output folder:  
+   ```
+   apps/extension/.output/chrome-mv3-dev
+   ```
+
+4. **Pin the NeverFail Wallet Extension**  
+   - Click the **🧩 Extensions (Puzzle Icon)** in your Chrome toolbar.  
+   - Click the **📌 Pin icon** next to **NeverFail Wallet**.  
+
+5. **Open the Side Panel**  
+   - Right-click the **NeverFail Wallet** icon.  
+   - Select **“Open in Side Panel.”**
+     
+6. **Create a Wallet & Get Devnet Funds**  
+   - Once the side panel opens, click **Create Wallet** to generate a new Solana wallet.  
+   - Copy your **public address**.  
+   - Get test tokens for Devnet:  
+     - **SOL Faucet** → [https://solfaucet.com/](https://solfaucet.com/)  
+     - **USDC Faucet (Circle)** → [https://faucet.circle.com/](https://faucet.circle.com/)  
+   - Use these faucets to fund your wallet with a small amount of **SOL** and **USDC (Devnet)**.
+  
+7. **Activate Premium RPC**  
+   Toggle **“Boost My Transaction”** to activate **Premium RPC Auto-Pay** ⚡️
 
 
 ## 🤝 Contribution
