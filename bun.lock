@@ -2,7 +2,7 @@
   "lockfileVersion": 1,
   "workspaces": {
     "": {
-      "name": "samui",
+      "name": "neverfail-wallet",
       "devDependencies": {
         "@biomejs/biome": "2.3.4",
         "@commitlint/cli": "^20.1.0",

@@ -10,7 +10,7 @@ interface Resources {
     indexLinkGenerate: 'Create a new wallet'
     indexLinkImport: 'I already have a wallet'
     indexPageDescription: 'We hope you enjoy your stay!'
-    indexPageTitle: 'Welcome to 🏝️ Samui Wallet'
+    indexPageTitle: 'Welcome to Neverfail Wallet'
   }
 }
 

@@ -58,7 +58,7 @@ For the backend source and setup guide, see:
 ```
 Wallet → Facilitator (402) → Pay USDC → Verify → Helius RPC → Result
 ```
-- **Client:** Samui Wallet + x402 toggle + auto-pay logic  
+- **Client:** Wallet + x402 toggle + auto-pay logic  
 - **Server:** Express + x402-express + Helius proxy  
 - **Payment:** On-chain USDC (Devnet) via X402 standard  
 - **RPC Switch:** Dynamic Solana Connection object updates instantly after payment
