@@ -1,28 +1,23 @@
 // src/entrypoints/sidepanel/app.tsx
 import '@/polyfills/buffer'
+import {
+  createAssociatedTokenAccountInstruction,
+  createTransferInstruction,
+  getAssociatedTokenAddress,
+  TOKEN_PROGRAM_ID,
+} from '@solana/spl-token'
+import { type ConfirmedSignatureInfo, Connection, PublicKey, Transaction } from '@solana/web3.js'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { getDbService } from '@workspace/background/services/db'
+import { getSignService } from '@workspace/background/services/sign'
 import { derivationPaths } from '@workspace/keypair/derivation-paths'
+import { ensureUint8Array } from '@workspace/keypair/ensure-uint8array'
 import { generateMnemonic } from '@workspace/keypair/generate-mnemonic'
 import { Button } from '@workspace/ui/components/button'
 import { ellipsify } from '@workspace/ui/lib/ellipsify'
-import { Home, History, Settings, ExternalLink, Check, Copy } from 'lucide-react'
+import { Check, Copy, ExternalLink, History, Home, Settings } from 'lucide-react'
 import { useState } from 'react'
-import { setPremiumMode, getConnection } from '@/lib/solana'
-import {
-  Connection,
-  PublicKey,
-  Transaction,
-  type ConfirmedSignatureInfo
-} from '@solana/web3.js'
-import {
-  getAssociatedTokenAddress,
-  createTransferInstruction,
-  createAssociatedTokenAccountInstruction,
-  TOKEN_PROGRAM_ID
-} from '@solana/spl-token'
-import { getSignService } from '@workspace/background/services/sign'
-import { ensureUint8Array } from '@workspace/keypair/ensure-uint8array'
+import { getConnection, setPremiumMode } from '@/lib/solana'
 
 async function ensureAtaIxIfMissing(
   conn: Connection,
@@ -43,7 +38,7 @@ export function App() {
   const [isPremium, setIsPremium] = useState(false)
   const [currentRPC, setCurrentRPC] = useState('https://api.devnet.solana.com')
   const [activeTab, setActiveTab] = useState<'home' | 'activity' | 'settings'>('home')
-  const [copied, setCopied] = useState(false);
+  const [copied, setCopied] = useState(false)
 
   const { mutateAsync } = useMutation({
     mutationFn: async () => {
@@ -64,12 +59,12 @@ export function App() {
   })
 
   const { data: recentTxs } = useQuery({
+    enabled: !!active && activeTab === 'activity',
     queryFn: async () => {
       const conn = new Connection(currentRPC)
       return await conn.getSignaturesForAddress(new PublicKey(active.publicKey), { limit: 10 })
     },
     queryKey: ['recentTxs', active?.publicKey, currentRPC],
-    enabled: !!active && activeTab === 'activity',
   })
 
   const togglePremium = async () => {
@@ -84,11 +79,11 @@ export function App() {
       } catch (e: any) {
         if (e.message?.includes('402')) {
           // PAYMENT FLOW (100% working)
-          const rpcBody = JSON.stringify({ jsonrpc: '2.0', id: '1', method: 'getSlot' })
-          const response = await fetch('https://x402-neverfail.blockforge.live/rpc', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+          const rpcBody = JSON.stringify({ id: '1', jsonrpc: '2.0', method: 'getSlot' })
+          const response = await fetch('https://x402.neverfailwallet.com/rpc', {
             body: rpcBody,
+            headers: { 'Content-Type': 'application/json' },
+            method: 'POST',
           })
           const data = await response.json()
           const payment = data.accepts[0]
@@ -103,7 +98,7 @@ export function App() {
 
           const [senderATA, recipientATA] = await Promise.all([
             getAssociatedTokenAddress(usdcMint, sender),
-            getAssociatedTokenAddress(usdcMint, recipient)
+            getAssociatedTokenAddress(usdcMint, recipient),
           ])
 
           const tx = new Transaction()
@@ -121,9 +116,9 @@ export function App() {
 
           const walletAccount: any = {
             address: active.publicKey,
-            publicKey: new PublicKey(active.publicKey).toBytes(),
             chains: ['solana:devnet'] as const,
             features: ['solana:signTransaction'] as const,
+            publicKey: new PublicKey(active.publicKey).toBytes(),
           }
 
           const signInput: any = {
@@ -135,18 +130,20 @@ export function App() {
           const outputs = await getSignService().signTransaction([signInput])
           const signedBytes = ensureUint8Array(outputs[0].signedTransaction)
 
-          const xPayment = Buffer.from(JSON.stringify({
-            x402Version: 1,
-            payload: { serializedTransaction: Buffer.from(signedBytes).toString('base64') }
-          })).toString('base64')
+          const xPayment = Buffer.from(
+            JSON.stringify({
+              payload: { serializedTransaction: Buffer.from(signedBytes).toString('base64') },
+              x402Version: 1,
+            }),
+          ).toString('base64')
 
-          const payResponse = await fetch('https://x402-neverfail.blockforge.live/rpc', {
-            method: 'POST',
+          const payResponse = await fetch('https://x402.neverfailwallet.com/rpc', {
+            body: rpcBody,
             headers: {
               'Content-Type': 'application/json',
-              'X-Payment': xPayment
+              'X-Payment': xPayment,
             },
-            body: rpcBody,
+            method: 'POST',
           })
 
           const payData = await payResponse.json()
@@ -170,26 +167,25 @@ export function App() {
   }
 
   const openUsdcFaucet = () => {
-    window.open("https://faucet.circle.com/", "_blank", "noopener,noreferrer");
-  };
+    window.open('https://faucet.circle.com/', '_blank', 'noopener,noreferrer')
+  }
 
   const openSolFaucet = () => {
-    window.open("https://solfaucet.com/", "_blank", "noopener,noreferrer");
-  };
-
+    window.open('https://solfaucet.com/', '_blank', 'noopener,noreferrer')
+  }
 
   const handleCopy = async () => {
-    const full = String(active?.publicKey || "");
-    if (!full) return;
+    const full = String(active?.publicKey || '')
+    if (!full) return
     try {
-      await navigator.clipboard.writeText(full);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1500);
+      await navigator.clipboard.writeText(full)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 1500)
       // toast({ title: "Copied", description: "Wallet address copied to clipboard." });
     } catch (e) {
       // toast({ title: "Copy failed", variant: "destructive" });
     }
-  };
+  }
 
   return (
     <div className="min-h-screen bg-gray-900 text-white flex flex-col">
@@ -203,48 +199,50 @@ export function App() {
                 {ellipsify(active?.publicKey || '', 6)}
               </div>
               <Button
-                variant="secondary"
-                size="sm"
-                onClick={handleCopy}
-                className="h-8 px-2 bg-gray-800 hover:bg-gray-700 text-gray-200"
-                title={copied ? "Copied!" : "Copy wallet address"}
                 aria-label="Copy wallet address"
+                className="h-8 px-2 bg-gray-800 hover:bg-gray-700 text-gray-200"
+                onClick={handleCopy}
+                size="sm"
+                title={copied ? 'Copied!' : 'Copy wallet address'}
+                variant="secondary"
               >
                 {copied ? (
                   <span className="inline-flex items-center gap-1.5">
-                    <Check className="h-4 w-4" aria-hidden="true" />
+                    <Check aria-hidden="true" className="h-4 w-4" />
                     <span className="sr-only">Copied</span>
                   </span>
                 ) : (
                   <span className="inline-flex items-center gap-1.5">
-                    <Copy className="h-4 w-4" aria-hidden="true" />
+                    <Copy aria-hidden="true" className="h-4 w-4" />
                     <span className="sr-only">Copy</span>
                   </span>
                 )}
               </Button>
             </div>
-          ) : <Button onClick={async () => await mutateAsync()}>Create Wallet</Button>}
+          ) : (
+            <Button onClick={async () => await mutateAsync()}>Create Wallet</Button>
+          )}
         </div>
       </div>
-      {active &&
+      {active && (
         <>
           {/* Tabs */}
           <div className="flex border-b border-gray-800">
             <button
-              onClick={() => setActiveTab('home')}
               className={`flex-1 py-4 flex items-center justify-center gap-2 text-sm font-medium transition-all ${activeTab === 'home' ? 'text-purple-400 border-b-2 border-purple-400' : 'text-gray-500'}`}
+              onClick={() => setActiveTab('home')}
             >
               <Home size={18} /> Home
             </button>
             <button
-              onClick={() => setActiveTab('activity')}
               className={`flex-1 py-4 flex items-center justify-center gap-2 text-sm font-medium transition-all ${activeTab === 'activity' ? 'text-purple-400 border-b-2 border-purple-400' : 'text-gray-500'}`}
+              onClick={() => setActiveTab('activity')}
             >
               <History size={18} /> Activity
             </button>
             <button
-              onClick={() => setActiveTab('settings')}
               className={`flex-1 py-4 flex items-center justify-center gap-2 text-sm font-medium transition-all ${activeTab === 'settings' ? 'text-purple-400 border-b-2 border-purple-400' : 'text-gray-500'}`}
+              onClick={() => setActiveTab('settings')}
             >
               <Settings size={18} /> Settings
             </button>
@@ -259,7 +257,8 @@ export function App() {
                   <div className="text-center">
                     <h2 className="text-xl font-bold">Boost My Transaction</h2>
                     <p className="text-sm text-gray-400 mt-2">
-                      Get premium RPC for your next transaction<br />
+                      Get premium RPC for your next transaction
+                      <br />
                       Pay 0.0001 USDC per call • No subscription
                     </p>
                   </div>
@@ -267,10 +266,12 @@ export function App() {
                   <div className="flex items-center justify-center gap-4">
                     <span className="text-sm text-gray-400">OFF</span>
                     <button
-                      onClick={togglePremium}
                       className={`w-14 h-8 rounded-full relative transition-all ${isPremium ? 'bg-green-500' : 'bg-gray-600'}`}
+                      onClick={togglePremium}
                     >
-                      <div className={`w-6 h-6 bg-white rounded-full absolute top-1 transition-all ${isPremium ? 'right-1' : 'left-1'}`} />
+                      <div
+                        className={`w-6 h-6 bg-white rounded-full absolute top-1 transition-all ${isPremium ? 'right-1' : 'left-1'}`}
+                      />
                     </button>
                     <span className="text-sm text-gray-400">ON</span>
                   </div>
@@ -278,12 +279,8 @@ export function App() {
                   {isPremium && (
                     <div className="text-center space-y-2">
                       <p className="text-green-400 font-bold text-lg">X402 Auto-Pay ENABLED</p>
-                      <p className="text-xs text-gray-300">
-                        Current RPC:
-                      </p>
-                      <p className="text-xs font-mono bg-gray-900 px-3 py-1 rounded break-all">
-                        {currentRPC}
-                      </p>
+                      <p className="text-xs text-gray-300">Current RPC:</p>
+                      <p className="text-xs font-mono bg-gray-900 px-3 py-1 rounded break-all">{currentRPC}</p>
                     </div>
                   )}
                 </div>
@@ -291,8 +288,8 @@ export function App() {
                 {/* Test Button - Clean Purple */}
                 {isPremium && (
                   <button
-                    onClick={testRPC}
                     className="w-full py-4 bg-gradient-to-r from-purple-600 to-pink-600 rounded-2xl font-bold text-lg hover:from-purple-700 hover:to-pink-700 transition-all"
+                    onClick={testRPC}
                   >
                     Test Premium RPC (Get Latest Slot)
                   </button>
@@ -305,14 +302,14 @@ export function App() {
                 <h2 className="text-xl font-bold text-center">Recent Activity</h2>
                 {recentTxs?.length ? (
                   recentTxs.map((tx: ConfirmedSignatureInfo) => (
-                    <div key={tx.signature} className="bg-gray-800 rounded-xl p-4 space-y-2">
+                    <div className="bg-gray-800 rounded-xl p-4 space-y-2" key={tx.signature}>
                       <div className="text-sm font-mono">{ellipsify(tx.signature, 16)}</div>
                       <div className="text-xs text-gray-400">Slot: {tx.slot}</div>
                       <a
-                        href={`https://explorer.solana.com/tx/${tx.signature}?cluster=devnet`}
-                        target="_blank"
-                        rel="noopener noreferrer"
                         className="text-purple-400 text-xs hover:underline block"
+                        href={`https://explorer.solana.com/tx/${tx.signature}?cluster=devnet`}
+                        rel="noopener noreferrer"
+                        target="_blank"
                       >
                         View on Solana Explorer
                       </a>
@@ -335,7 +332,7 @@ export function App() {
             )}
           </div>
         </>
-      }
+      )}
       {/* Footer */}
       <div className="border-t border-gray-800 p-4 text-xs text-gray-400">
         <div className="flex items-center justify-between flex-wrap gap-3">
@@ -343,14 +340,14 @@ export function App() {
             <span className="h-2 w-2 rounded-full bg-green-500" />
             Network: <span className="font-mono text-gray-300">devnet</span>
           </span>
-          {active &&
+          {active && (
             <div className="flex items-center gap-2">
               <Button
-                size="sm"
-                variant="secondary"
-                onClick={openSolFaucet}
                 className="h-8 px-3 bg-gray-800 hover:bg-gray-700 text-gray-200"
+                onClick={openSolFaucet}
+                size="sm"
                 title="Open SOL faucet"
+                variant="secondary"
               >
                 <span className="inline-flex items-center gap-1.5">
                   <ExternalLink className="h-4 w-4" />
@@ -359,11 +356,11 @@ export function App() {
               </Button>
 
               <Button
-                size="sm"
-                variant="secondary"
-                onClick={openUsdcFaucet}
                 className="h-8 px-3 bg-gray-800 hover:bg-gray-700 text-gray-200"
+                onClick={openUsdcFaucet}
+                size="sm"
                 title="Open USDC faucet"
+                variant="secondary"
               >
                 <span className="inline-flex items-center gap-1.5">
                   <ExternalLink className="h-4 w-4" />
@@ -371,12 +368,9 @@ export function App() {
                 </span>
               </Button>
             </div>
-          }
+          )}
         </div>
-
-
       </div>
-
     </div>
   )
 }

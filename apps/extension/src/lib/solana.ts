@@ -1,18 +1,19 @@
 // src/lib/solana.ts
+
+import { createTransferInstruction, getAssociatedTokenAddress } from '@solana/spl-token'
 import { Connection, PublicKey, Transaction } from '@solana/web3.js'
-import { getAssociatedTokenAddress, createTransferInstruction, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { getDbService } from '@workspace/background/services/db'
 
-const FACILITATOR_URL = 'https://x402-neverfail.blockforge.live/rpc'
+const FACILITATOR_URL = 'https://x402.neverfailwallet.com/rpc'
 let isPremium = false
 
-let customFetch: typeof fetch = fetch
+let customFetch: typeof fetch | undefined
 
 export const setPremiumMode = (enabled: boolean, premiumUrl?: string) => {
   isPremium = enabled
 
   if (enabled && premiumUrl) {
-    customFetch = async (input: any, init?: any) => {
+    customFetch = async (input: RequestInfo | URL, init?: RequestInit) => {
       const url = typeof input === 'string' ? input : input.url
       if (!url.includes(FACILITATOR_URL)) return fetch(input, init)
 
@@ -27,24 +28,19 @@ export const setPremiumMode = (enabled: boolean, premiumUrl?: string) => {
 
       // Build USDC transfer
       const activeAccount = await getDbService().account.active()
-      const wallet = await getDbService().wallet.get(activeAccount!.walletId)
+      if (!activeAccount?.walletId) throw new Error('No active wallet')
+      const wallet = await getDbService().wallet.get(activeAccount.walletId)
+      if (!wallet?.publicKey) throw new Error('No wallet public key')
 
       const tx = new Transaction()
       const usdcMint = new PublicKey(req.token)
       const recipient = new PublicKey(req.recipient)
       const amount = BigInt(req.maxAmountRequired)
 
-      const senderATA = await getAssociatedTokenAddress(usdcMint, wallet.publicKey!)
+      const senderATA = await getAssociatedTokenAddress(usdcMint, new PublicKey(wallet.publicKey))
       const recipientATA = await getAssociatedTokenAddress(usdcMint, recipient)
 
-      tx.add(
-        createTransferInstruction(
-          senderATA,
-          recipientATA,
-          wallet.publicKey!,
-          amount
-        )
-      )
+      tx.add(createTransferInstruction(senderATA, recipientATA, new PublicKey(wallet.publicKey), amount))
 
       // Sign with wallet
       const signedTx = await wallet.signTransaction(tx)
@@ -56,12 +52,10 @@ export const setPremiumMode = (enabled: boolean, premiumUrl?: string) => {
         headers: {
           ...init?.headers,
           'X-Payment': JSON.stringify({
+            payload: { serializedTransaction: serialized.toString('base64') },
             version: 1,
-            payload: {
-              serializedTransaction: serialized.toString('base64')
-            }
-          })
-        }
+          }),
+        },
       })
     }
   } else {
@@ -70,9 +64,7 @@ export const setPremiumMode = (enabled: boolean, premiumUrl?: string) => {
 }
 
 export const getConnection = (): Connection => {
-  return new Connection(
-    isPremium ? FACILITATOR_URL : 'https://api.devnet.solana.com',
-    'confirmed',
-    { fetch: customFetch }
-  )
+  return new Connection(isPremium ? FACILITATOR_URL : 'https://api.devnet.solana.com', 'confirmed', {
+    fetch: customFetch,
+  })
 }

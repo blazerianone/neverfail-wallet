@@ -3,14 +3,13 @@
 A Solana wallet extension that adds **x402 Pay-per-RPC**:  
 when the network is congested or public RPCs are unreliable, users can **buy one-off premium RPC access** (USDC on devnet) directly inside the wallet — no subscriptions or monthly plans.
 
-> **Facilitator (devnet):** `https://x402-neverfail.blockforge.live/rpc`  
-> **Base:** Forked from [samui-build/samui-wallet](https://github.com/samui-build/samui-wallet)  
-> We modified only the **extension** (`apps/extension/src/entrypoints/sidepanel/*`)  
-> and added `apps/extension/src/lib/solana.ts` for x402 integration.
-
 <p align="center">
   <img src="demo.gif" alt="NeverFail Wallet – Pay-per-RPC Demo" width="720">
 </p>
+
+> **Base:** Forked from [samui-build/samui-wallet](https://github.com/samui-build/samui-wallet)  
+> We modified only the **extension** (`apps/extension/src/entrypoints/sidepanel/*`)  
+> and added `apps/extension/src/lib/solana.ts` for x402 integration.
 
 ---
 
@@ -124,8 +123,16 @@ If you’d like to improve wallet UX, add new RPC providers, or extend x402 supp
 
 ---
 
-**Facilitator Source:**  
-[https://github.com/blazerianone/neverfail-wallet-facilitator](https://github.com/blazerianone/neverfail-wallet-facilitator)
+## 🪪 License
+[MIT](./LICENSE) © 2025 blazerianone
+
+---
+
+## 🔗 Links
+
+- **Website**: https://neverfailwallet.com/
+- **Facilitator (Devnet)**: https://x402.neverfailwallet.com/rpc
+- **Facilitator Source**: https://github.com/blazerianone/neverfail-wallet-facilitator
 
 ---
 

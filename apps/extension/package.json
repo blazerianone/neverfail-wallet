@@ -1,11 +1,14 @@
 {
   "dependencies": {
+    "@solana/spl-token": "^0.4.14",
     "@solana/wallet-standard-features": "^1.3.0",
+    "@solana/web3.js": "^1.98.4",
     "@tanstack/react-query": "catalog:",
     "@workspace/background": "workspace:*",
     "@workspace/keypair": "workspace:*",
     "@workspace/ui": "workspace:*",
     "@workspace/wallet-standard": "workspace:*",
+    "lucide-react": "^0.548.0",
     "react": "catalog:",
     "react-dom": "catalog:"
   },
