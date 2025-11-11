@@ -128,7 +128,7 @@ If you’d like to improve wallet UX, add new RPC providers, or extend x402 supp
 ---
 
 ## 🪪 License
-[MIT](./LICENSE) © 2025 blazerianone
+[MIT](./LICENSE) © 2025 NeverFail Wallet
 
 ---
 
