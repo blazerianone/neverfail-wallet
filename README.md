@@ -88,6 +88,10 @@ cd neverfail-wallet
 
 # 2. Install Bun (if not installed)
 # macOS / Linux
+# Option 1: via Homebrew
+brew install oven-sh/bun/bun
+
+# Option 2: via shell script
 curl -fsSL https://bun.sh/install | bash
 
 # Windows (PowerShell)
